@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "{{ cookiecutter.package_name }}"
+version = "0.1.0"
+description = "{{ cookiecutter.project_short_description }}"
+authors = ["{{ cookiecutter.author_name }} <{{ cookiecutter.author_email }}>"]
+
+[tool.poetry.dependencies]
+python = "~{{ cookiecutter.python_version }}"
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "*"
+
+[tool.poetry.group.lint.dependencies]
+pre-commit = "*"
+
+[tool.poetry.group.test.dependencies]
+pytest = "*"
+pytest-cov = "*"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line_length = 80
+
+[tool.mypy]
+python_version = "{{ cookiecutter.python_version }}"
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint]
+disable = ["all"]
+enable = ["W0511"]
+
+[tool.pytest.ini_options]
+addopts = """\
+    --cov={{ cookiecutter.package_name }} \
+    --cov-report=html \
+    --cov-report=term-missing:skip-covered \
+    --cov-fail-under=95 \
+    --capture=no \
+    --doctest-modules\
+"""

@@ -1,0 +1,11 @@
+{
+    "project_name": "Project name",
+    "package_name": "{{ cookiecutter.project_name.lower().replace('-', '_') }}",
+    "project_short_description": "Project description",
+    "author_name": "Adrian Fuertes",
+    "author_email": "adrian@fuertes.app",
+    "python_version": [
+        "3.10",
+        "3.11"
+    ]
+}

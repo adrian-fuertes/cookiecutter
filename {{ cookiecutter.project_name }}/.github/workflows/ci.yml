@@ -1,0 +1,104 @@
+name: Package CI on PR and push to main
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    paths:
+      - "src/{{ cookiecutter.package_name }}/**"
+      - "tests/**"
+  push:
+    branches:
+      - "main"
+    paths:
+      - "src/{{ cookiecutter.package_name }}/**"
+      - "tests/**"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup python
+        uses: actions/setup-python@v3
+        id: setup-python
+        with:
+          python-version: [{{ cookiecutter.python_version }}]
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1f
+        with:
+          version: 1.2.0b1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Cache CI dependencies
+        uses: actions/cache@v2
+        id: cache-ci-dependencies
+        with:
+          path: .venv
+          key: {% raw %}venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}{% endraw %}
+
+      - name: Install CI dependencies
+        if: steps.cache-ci-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root --without dev,test
+
+      - name: Cache linting dependencies
+        uses: actions/cache@v2
+        id: cache-linting-dependencies
+        with:
+          path: ~/.cache/pre-commit
+          key: {% raw %}venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/.pre-commit-config.yaml') }}{% endraw %}
+
+      - name: Install linting dependencies
+        if: steps.cache-linting-dependencies.outputs.cache-hit != 'true'
+        run: poetry run pre-commit install --overwrite --install-hooks
+
+      - name: Run linting
+        run: poetry run pre-commit run --config .pre-commit-config.yaml --all-files
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup python
+        uses: actions/setup-python@v3
+        id: setup-python
+        with:
+          python-version: {{ cookiecutter.python_version }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.2.0b1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Cache CI dependencies
+        uses: actions/cache@v2
+        id: cache-ci-dependencies
+        with:
+          path: .venv
+          key: {% raw %}venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}{% endraw %}
+
+      - name: Install testing dependencies
+        if: steps.cache-ci-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root  --without dev,lint
+
+      - name: Install package
+        run: poetry install --no-interaction
+
+      - name: Run pytest
+        run: poetry run pytest tests

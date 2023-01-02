@@ -1,2 +1,4 @@
-# cookiecutter
- My Python development cookiecutters template
+# Python project template
+
+ My Python development [cookiecutter](https://cookiecutter.readthedocs.io/en/stable/) template.
+
